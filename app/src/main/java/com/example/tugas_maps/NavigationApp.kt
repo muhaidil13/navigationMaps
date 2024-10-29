@@ -144,10 +144,6 @@ fun NavGraphBuilder.BottomNavigation(
 
     composable(BottomMenuScreen.HomePage.route){
 
-
-        LaunchedEffect(Unit) {
-            mainViewModel.getAllMarkersFromDatabase(mapView)
-        }
         SetUp(
             mapView = mapView,
             mainViewModel = mainViewModel,
@@ -158,15 +154,12 @@ fun NavGraphBuilder.BottomNavigation(
 
     composable(BottomMenuScreen.WisataPage.route){
 
-        LaunchedEffect(Unit) {
-            mainViewModel.getAllMarkersFromDatabase(mapView)
-        }
 
-        WisataScreen(navController,mainViewModel )
+        WisataScreen(navController,mainViewModel, mapView )
     }
     composable(BottomMenuScreen.KulinerPage.route){
 
-        KulinerScreen(navController,mainViewModel)
+        KulinerScreen(navController,mainViewModel, mapView)
     }
     composable(BottomMenuScreen.AboutPage.route){
         AboutScreen()

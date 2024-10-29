@@ -98,7 +98,7 @@ fun MarkerDialog(location: Point, onDismis:() -> Unit, onAddMarker: (Marker) -> 
                         .fillMaxWidth(),
                     label = { Text("Enter your text") },
                     placeholder = { Text("Write something...") },
-                    maxLines = Int.MAX_VALUE,  // Membuatnya mendukung banyak baris
+                    maxLines = Int.MAX_VALUE,
                     keyboardOptions = KeyboardOptions.Default.copy(
                         keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Default

@@ -17,15 +17,21 @@ import com.example.tugas_maps.MainViewModel
 import com.example.tugas_maps.data.model.Marker
 import com.google.android.gms.location.FusedLocationProviderClient
 import androidx.compose.runtime.livedata.observeAsState
+import com.mapbox.maps.MapView
 
 
 @Composable
-fun KulinerScreen(navController: NavController, mainViewModel: MainViewModel){
+fun KulinerScreen(navController: NavController, mainViewModel: MainViewModel, mapView: MapView){
+    LaunchedEffect(Unit) {
+        mainViewModel.getAllMarkersFromDatabase(mapView)
+    }
     val kulinerMarkers = mainViewModel.markers.observeAsState(emptyList()).value.filter { it is Marker.KulinerMarker }
 
     Scaffold {values ->
 
-        LazyColumn(modifier = Modifier.fillMaxWidth().padding(values), contentPadding = PaddingValues(16.dp)){
+        LazyColumn(modifier = Modifier
+            .fillMaxWidth()
+            .padding(values), contentPadding = PaddingValues(16.dp)){
             items(kulinerMarkers){
                 Button(
                     onClick = {

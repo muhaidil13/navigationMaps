@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import bitmapFromDrawableRes
 import com.example.tugas_maps.data.model.Marker
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
@@ -15,6 +16,7 @@ import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.EdgeInsets
 import com.mapbox.maps.MapView
+import com.mapbox.maps.Style
 import com.mapbox.maps.plugin.animation.MapAnimationOptions
 import com.mapbox.maps.plugin.animation.camera
 import com.mapbox.maps.plugin.annotation.annotations
@@ -52,7 +54,7 @@ class MainViewModel(application: Application): AndroidViewModel(application) {
     private val _isAdmin = MutableStateFlow<Boolean>(true)
     val isAdmin: StateFlow<Boolean> get() = _isAdmin
 
-    private val _useCustomLocation = MutableStateFlow<Boolean>(true)
+    private val _useCustomLocation = MutableStateFlow<Boolean>(false)
     val isCustom: StateFlow<Boolean> get() = _useCustomLocation
 
 
@@ -150,7 +152,12 @@ class MainViewModel(application: Application): AndroidViewModel(application) {
         val point = Point.fromLngLat(marker.location.longitude(), marker.location.latitude())
         firestore.collection(MARKER_COLLECTION).add(markerData).addOnSuccessListener {
             Toast.makeText(mapView.context, "Suksess Menambahkan Marker", Toast.LENGTH_SHORT).show()
+            mapView.mapboxMap.loadStyle(Style.MAPBOX_STREETS){style ->
+                bitmapFromDrawableRes(mapView.context, R.drawable.red_mark)?.let{bitmap ->
+                    style.addImage("marker-icon-id", bitmap)
+                }}
             addMarker(mapView, point)
+
         }.addOnFailureListener{
             Toast.makeText(mapView.context, "Gagal Menambahkan Marker", Toast.LENGTH_SHORT).show()
 

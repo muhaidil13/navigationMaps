@@ -9,22 +9,28 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.example.tugas_maps.MainViewModel
 import com.example.tugas_maps.data.model.Marker
+import com.mapbox.maps.MapView
 
 @Composable
-fun WisataScreen(navController: NavController, mainViewModel: MainViewModel){
+fun WisataScreen(navController: NavController, mainViewModel: MainViewModel, mapView: MapView){
+    LaunchedEffect(Unit) {
+        mainViewModel.getAllMarkersFromDatabase(mapView)
+    }
     val wisataMarker = mainViewModel.markers.observeAsState(emptyList()).value.filter { it is Marker.WisataMarker }
+
     Scaffold {values ->
         LazyColumn (modifier = Modifier.padding(values)){
             items(wisataMarker){
                 Button(onClick = {
                     navController.navigate("map/locationName/${it.location.latitude()}/${it.location.longitude()}")
                 }) {
-                    Text("Hello")
+                    Text(it.locationName)
                 }
             }
         }
