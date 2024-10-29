@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
 import com.example.tugas_maps.MainViewModel
 import com.example.tugas_maps.data.model.Marker
@@ -30,7 +31,7 @@ fun WisataScreen(navController: NavController, mainViewModel: MainViewModel, map
                 Button(onClick = {
                     navController.navigate("map/locationName/${it.location.latitude()}/${it.location.longitude()}")
                 }) {
-                    Text(it.locationName)
+                    Text(it.locationName, color = Color.Black)
                 }
             }
         }
