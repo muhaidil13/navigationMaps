@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "519112473131",
+    "project_id": "navigation-app-318b9",
+    "storage_bucket": "navigation-app-318b9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:519112473131:android:fb8597aec95f6f00ee086e",
+        "android_client_info": {
+          "package_name": "com.example.latihan_maps"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDh7Vt8k4bu49-sJgZYHVwJ0iPxVC896JE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:519112473131:android:4d8c2fa367cd58b6ee086e",
+        "android_client_info": {
+          "package_name": "com.example.navigationapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDh7Vt8k4bu49-sJgZYHVwJ0iPxVC896JE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:519112473131:android:770f432ea8f544c2ee086e",
+        "android_client_info": {
+          "package_name": "com.example.tugas_maps"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDh7Vt8k4bu49-sJgZYHVwJ0iPxVC896JE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

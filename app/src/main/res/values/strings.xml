@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Tugas_Maps</string>
+    <string name="mapbox_access_token">sk.eyJ1IjoiZmFyaWR3YWpkaWEiLCJhIjoiY20yajNsdW10MDFqOTJqcjB1d3F3eG9rNCJ9.yki0bdm6plcwr2d3vRuNeg</string>
+
+</resources>
