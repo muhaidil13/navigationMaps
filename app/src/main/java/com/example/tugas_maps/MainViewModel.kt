@@ -1,16 +1,24 @@
 package com.example.tugas_maps
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
+import android.content.pm.PackageManager
 import android.util.Log
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import bitmapFromDrawableRes
 import com.example.tugas_maps.data.model.Marker
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
+import com.google.firebase.firestore.QuerySnapshot
 import com.mapbox.api.directions.v5.models.RouteOptions
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
@@ -31,21 +39,33 @@ import com.mapbox.navigation.core.MapboxNavigation
 import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineView
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 
 
 class MainViewModel(application: Application): AndroidViewModel(application) {
-    val customPoint = Point.fromLngLat(119.47908175133358, -5.170677805504212)
+    val customPoint =  Point.fromLngLat(119.47908175133358, -5.170677805504212)
+    val customBearing = 30.0
 
     val LOG_TAG = "testMapbox"
     private val MARKER_COLLECTION = "marker"
     private val firestore = FirebaseFirestore.getInstance()
 
+    private val _startPosition = MutableStateFlow<Point?>(null)
+    val startPosition: StateFlow<Point?> get() = _startPosition
+
+    private val _startBearing = MutableStateFlow<Double?>(null)
+    val startBearing: StateFlow<Double?> get() = _startBearing
+
+
     private val _markers = MutableLiveData<List<Marker>>()
     val markers: LiveData<List<Marker>> get() = _markers
 
-    private val _startPosition = MutableStateFlow<Point?>(null)
-    val startPosition: StateFlow<Point?> get() = _startPosition
+
+
+
+    private val _destinationPoint = MutableStateFlow<Point?>(null)
+    val destinationPoint: StateFlow<Point?> get() = _destinationPoint
 
 
     private val _showDialog = MutableStateFlow<Boolean>(false)
@@ -58,21 +78,63 @@ class MainViewModel(application: Application): AndroidViewModel(application) {
     val isCustom: StateFlow<Boolean> get() = _useCustomLocation
 
 
+    private val _isStart = MutableStateFlow<Boolean>(false)
+    val isStart: StateFlow<Boolean> get() = _isStart
+
+    private val _markerIsAdded = MutableStateFlow<Boolean>(false)
+    val markerIsAdded: StateFlow<Boolean> get() = _markerIsAdded
+
+
+    private val _marker = MutableStateFlow<Marker?>(null)
+    val marker: StateFlow<Marker?> get() = _marker
+
+
+
+
     lateinit var navigation: MapboxNavigation
-    lateinit var  routeLineView: MapboxRouteLineView
 
 
 
-    fun updateIsCustomLocation(status: Boolean){
+
+    init {
+        getAllMarkersFromDatabase()
+    }
+
+
+
+    fun getListOfMarkerWisata():List<Marker>?{
+        return _markers.value?.filter { it is Marker.WisataMarker }
+    }
+
+    fun getListOfMarkerKuliner():List<Marker>?{
+        return _markers.value?.filter { it is Marker.KulinerMarker }
+    }
+
+    fun updateStatusmarkerIsAdded(status: Boolean){
+        _markerIsAdded.value = status
+    }
+    fun updatestatususeCustomLocation(status: Boolean){
         _useCustomLocation.value = status
+    }
+
+    fun updateStartNavigation(status: Boolean){
+        _isStart.value = status
     }
 
     fun updateShowDialog(status: Boolean){
         _showDialog.value = status
     }
 
-    fun updateStartPosition(latitude: Double, longitude: Double) {
-        _startPosition.value = Point.fromLngLat(longitude, latitude)
+    fun updateStartPosition(point: Point) {
+        _startPosition.value = point
+    }
+
+    fun  updateStartBearing(bearing: Double){
+        _startBearing.value = bearing
+    }
+
+    fun updateDestinationPosition(point: Point?) {
+        _destinationPoint.value = point
     }
 
 
@@ -80,119 +142,86 @@ class MainViewModel(application: Application): AndroidViewModel(application) {
         navigation = mapboxNav
     }
 
-    fun updateCamera(mapView: MapView, point: Point){
-        val mapAnimationOptionsBuilder = MapAnimationOptions.Builder()
-        mapView.camera.easeTo(
-            CameraOptions.Builder()
-                .center(point)
-                .pitch(45.0)
-                .zoom(16.0)
-                .padding(EdgeInsets(0.0, 0.0, 0.0, 0.0))
-                .build(),
-            mapAnimationOptionsBuilder.build()
-        )
-    }
-    fun setNavigationRoutes(routes: List<NavigationRoute>, mapView: MapView) {
-        navigation.setNavigationRoutes(routes)
-        mapView.mapboxMap.style?.apply {
-            routeLineView.hideAlternativeRoutes(this)
-        }
-    }
 
-
-
-    fun fetchRoute(context: Context, mapView: MapView, start: Point, destination: Point){
-        navigation.requestRoutes(RouteOptions.builder()
-            .applyDefaultNavigationOptions()
-            .applyLanguageAndVoiceUnitOptions(context)
-            .coordinatesList(listOf(start,destination))
-            .layersList(listOf(navigation.getZLevel(), null))
-            .build(),
-            object : NavigationRouterCallback{
-                override fun onCanceled(routeOptions: RouteOptions, routerOrigin: String) {
-
-                }
-
-                override fun onFailure(reasons: List<RouterFailure>, routeOptions: RouteOptions) {
-
-                }
-
-                override fun onRoutesReady(routes: List<NavigationRoute>, routerOrigin: String) {
-                    setNavigationRoutes(routes, mapView)
-                }
-
-            }
-        )
-    }
-    fun addMarker(mapView: MapView, point: Point){
-        val pointManager = mapView.annotations.createPointAnnotationManager()
-        val annotationOptions = PointAnnotationOptions()
-            .withPoint(Point.fromLngLat(point.longitude(), point.latitude()))
-            .withIconImage("marker-icon-id") // Use the registered icon
-
-        val  marker = pointManager.create(annotationOptions) // Create the marker on the map
-        pointManager.addClickListener{clickMarker ->
-            if(marker.id == clickMarker.id){
-                Toast.makeText(mapView.context, "Marker ${point.longitude()}", Toast.LENGTH_LONG ).show()
-            }
-            true
-        }
-
-        Log.d(LOG_TAG, "Marker added at: ${point.latitude()}, ${point.longitude()}")
-    }
-
-    fun saveMarkerToDatabase(marker: Marker, mapView: MapView){
+    fun saveMarkerToDatabase(marker: Marker, context: Context){
         val markerData = hashMapOf(
             "locationName" to marker.locationName,
             "latitude" to marker.location.latitude(),
             "longitude" to marker.location.longitude(),
             "type" to marker.type
         )
-
-        val point = Point.fromLngLat(marker.location.longitude(), marker.location.latitude())
         firestore.collection(MARKER_COLLECTION).add(markerData).addOnSuccessListener {
-            Toast.makeText(mapView.context, "Suksess Menambahkan Marker", Toast.LENGTH_SHORT).show()
-            mapView.mapboxMap.loadStyle(Style.MAPBOX_STREETS){style ->
-                bitmapFromDrawableRes(mapView.context, R.drawable.red_mark)?.let{bitmap ->
-                    style.addImage("marker-icon-id", bitmap)
-                }}
-            addMarker(mapView, point)
-
+            Toast.makeText(context, "Suksess Menambahkan Marker", Toast.LENGTH_SHORT).show()
+            updateStatusmarkerIsAdded(true)
         }.addOnFailureListener{
-            Toast.makeText(mapView.context, "Gagal Menambahkan Marker", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Gagal Menambahkan Marker", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun getAllMarkersFromDatabase() {
+        firestore.collection(MARKER_COLLECTION)
+            .addSnapshotListener{snapshot, error ->
+                if(error != null){
+                    return@addSnapshotListener
+                }
+               fetchMarkers(snapshot)
+            }
+    }
+    fun getMarkersById(id: String){
+        firestore.collection(MARKER_COLLECTION).document(id).get().addOnSuccessListener {document ->
+            if(document.exists()){
+                val  idMarker = document.id
+                val locationName = document.getString("locationName") ?: ""
+                val latitude = document.getDouble("latitude") ?: 0.0
+                val longitude = document.getDouble("longitude") ?: 0.0
+                val type = document.getString("type") ?: ""
+                val point = Point.fromLngLat(longitude, latitude)
+                val marker =  when (type) {
+                    "wisata" -> Marker.WisataMarker(idMarker, locationName, point, type)
+                    "kuliner" -> Marker.KulinerMarker(idMarker, locationName, point, type)
+                    else -> null
+                }
+                _marker.value =marker
+            }
 
         }
     }
-    fun getAllMarkersFromDatabase(mapView: MapView) {
-        firestore.collection(MARKER_COLLECTION)
-            .get()
-            .addOnSuccessListener { documents ->
-                val markerList = mutableListOf<Marker>()
-                for (document in documents) {
-                    val locationName = document.getString("locationName") ?: continue
-                    val latitude = document.getDouble("latitude") ?: continue
-                    val longitude = document.getDouble("longitude") ?: continue
-                    val type = document.getString("type") ?: continue
-                    val point = Point.fromLngLat(longitude, latitude)
 
-                    // Instantiate the correct subclass of Marker
-                    val marker = when (type) {
-                        "wisata" -> Marker.WisataMarker(locationName, point, type)
-                        "kuliner" -> Marker.KulinerMarker(locationName, point, type)
-                        else -> continue // Skip if type is unrecognized
-                    }
+    @SuppressLint("MissingPermission")
+    fun getUserLocation(context: Context){
+        val fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
+        viewModelScope.launch {
+            fusedLocationProviderClient.lastLocation.addOnSuccessListener { location ->
+                location?.let {
+                    Log.d(LOG_TAG, "${it.latitude}")
+                    updateStartPosition(Point.fromLngLat(it.longitude, it.latitude))
+                    updateStartBearing(it.bearing.toDouble())
 
-                    markerList.add(marker)
-                    addMarker(mapView,point)
-                }
-                _markers.value = markerList
-            }
-            .addOnFailureListener { exception ->
-                when(exception){
-                    is FirebaseFirestoreException -> {
-                        Toast.makeText(mapView.context, "Sedang Terjadi Masalah Pada Jaringan Coba Lagi Nanti", Toast.LENGTH_LONG).show()
-                    }
                 }
             }
+        }
+    }
+    fun fetchMarkers(snapshot: QuerySnapshot?) {
+        viewModelScope.launch {
+            snapshot?.let {
+                if (!snapshot.isEmpty) {
+                    val datalist = snapshot.documents.mapNotNull { document ->
+                        val  id = document.id
+                        val locationName = document.getString("locationName") ?: ""
+                        val latitude = document.getDouble("latitude") ?: 0.0
+                        val longitude = document.getDouble("longitude") ?: 0.0
+                        val type = document.getString("type") ?: ""
+                        val point = Point.fromLngLat(longitude, latitude)
+
+                        when (type) {
+                            "wisata" -> Marker.WisataMarker(id, locationName, point, type)
+                            "kuliner" -> Marker.KulinerMarker(id, locationName, point, type)
+                            else -> null
+                        }
+                    }
+                    _markers.value = datalist
+                }
+            }
+        }
     }
 }

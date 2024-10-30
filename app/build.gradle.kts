@@ -2,8 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     id("com.google.gms.google-services")
-//    id("com.google.dagger.hilt.android")
-//    id("kotlin-kapt")
+
 }
 
 android {
@@ -55,7 +54,7 @@ android {
 dependencies {
     implementation("com.mapbox.navigationcore:android:3.5.0-rc.1") // Core SDK
     implementation("com.mapbox.navigationcore:ui-components:3.5.0-rc.1") // UI SDK
-    implementation("com.google.android.gms:play-services-location:21.0.1")  // Google Location Service
+    implementation("com.google.android.gms:play-services-location:21.3.0")  // Google Location Service
     implementation(platform("com.google.firebase:firebase-bom:33.5.1")) // Firebase SDK
     implementation("com.google.firebase:firebase-auth") //Firebase Auth
     implementation("com.google.firebase:firebase-firestore")    // Firebase Firestore

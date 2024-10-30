@@ -19,14 +19,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 import com.example.tugas_maps.ui.theme.Tugas_MapsTheme
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
 import com.mapbox.api.directions.v5.models.Bearing
@@ -53,16 +57,17 @@ import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineApiOptions
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineViewOptions
 
 
-//@AndroidEntryPoint
+
+@ExperimentalMaterial3Api
 class MainActivity : ComponentActivity() {
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
         object : ActivityResultCallback<Boolean> {
             override fun onActivityResult(result: Boolean) {
                 if (result) {
-                    Toast.makeText(applicationContext, "Permission Grand", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(applicationContext, "Isin Berhasil Diberikan", Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(applicationContext, "Permission ", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(applicationContext, "Aplikasi Ini Memelukan Isin  ", Toast.LENGTH_SHORT).show()
 
                 }
             }
@@ -99,14 +104,12 @@ class MainActivity : ComponentActivity() {
 
 
 
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestPermission()
-
         enableEdgeToEdge()
         setContent {
+
             Tugas_MapsTheme {
                 NavigationApp(mapboxNavigation)
 

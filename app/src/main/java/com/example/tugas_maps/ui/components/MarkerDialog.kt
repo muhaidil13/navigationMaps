@@ -74,9 +74,9 @@ fun MarkerDialog(location: Point, onDismis:() -> Unit, onAddMarker: (Marker) -> 
             Button(
                 onClick = {
                     val markerType = if (isWisata) {
-                        Marker.WisataMarker(name, location, "wisata")
+                        Marker.WisataMarker(locationName =  name, location =  location, type= "wisata", id = null)
                     } else {
-                        Marker.KulinerMarker(name, location, "kuliner")
+                        Marker.KulinerMarker(locationName =  name, location= location, type =  "kuliner",id = null)
                     }
                     onAddMarker(markerType)
                 },

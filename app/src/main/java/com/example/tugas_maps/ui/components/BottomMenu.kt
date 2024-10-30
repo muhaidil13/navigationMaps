@@ -36,7 +36,7 @@ fun BottomMenu(navController: NavController){
                         navController.graph.startDestinationRoute?.let {route ->
                             popUpTo(route){
                                 saveState = true
-                                inclusive = true
+//                                inclusive = true
                             }
                             launchSingleTop = true
                             restoreState = true
